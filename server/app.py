@@ -30,6 +30,27 @@ def bakery_by_id(id):
     bakery_serialized = bakery.to_dict()
     return make_response ( bakery_serialized, 200  )
 
+@app.route('/baked_goods', methods=['POST'])
+def create_baked_good():
+    data = request.json
+    name = data.get('name')
+    price = data.get('price')
+    bakery_id = data.get('bakery_id')
+
+    if not all([name, price, bakery_id]):
+        return make_response(jsonify({'error': 'Incomplete data provided'}), 400)
+
+    bakery = Bakery.query.get(bakery_id)
+    if not bakery:
+        return make_response(jsonify({'error': 'Bakery not found'}), 404)
+
+    baked_good = BakedGood(name=name, price=price, bakery_id=bakery_id)
+    db.session.add(baked_good)
+    db.session.commit()
+
+    return make_response(jsonify({'message': 'Baked good created successfully'}), 201)
+
+
 @app.route('/baked_goods/by_price')
 def baked_goods_by_price():
     baked_goods_by_price = BakedGood.query.order_by(BakedGood.price.desc()).all()
